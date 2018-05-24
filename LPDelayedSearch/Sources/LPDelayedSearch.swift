@@ -12,7 +12,7 @@
 import UIKit
 
 public typealias LPPerformSearchBlock = (_ text: String?) -> Void
-public protocol LPDelayedSearchProtocol: class {
+public protocol LPDelayedSearch: class {
     
     /// 获取搜索视图
     var searchView: UIView { get }
@@ -31,44 +31,45 @@ public protocol LPDelayedSearchProtocol: class {
     func performSearchNow() -> String?
 }
 
-public extension LPDelayedSearchProtocol {
+public extension LPDelayedSearch {
     
     func performSearch(afterDelay delay: TimeInterval,
                        execute: @escaping LPPerformSearchBlock) {
         let view = searchView
-        let observer = LPDelayedSearch.observer(of: view)
+        let observer = LPDelayedSearchInternal.observer(of: view)
         guard observer == nil else { return }
-        LPDelayedSearch(toSearchView: view,
-                        afterDelay: delay,
-                        searchBlock: execute)
+        LPDelayedSearchInternal(toSearchView: view,
+                                afterDelay: delay,
+                                searchBlock: execute)
     }
     
     func performSearchNow() -> String? {
         let view = searchView
-        guard let observer = LPDelayedSearch.observer(of: view) else {
+        guard let observer = LPDelayedSearchInternal.observer(of: view) else {
             return view.value(forKeyPath: "text") as? String
         }
         return observer.performSearchNow()
     }
 }
 
-extension UISearchBar: LPDelayedSearchProtocol {
+extension UISearchBar: LPDelayedSearch {
     public var searchView: UIView { return self }
 }
 
-extension UITextField: LPDelayedSearchProtocol {
+extension UITextField: LPDelayedSearch {
     public var searchView: UIView { return self }
 }
 
-extension UITextView: LPDelayedSearchProtocol {
+extension UITextView: LPDelayedSearch {
     public var searchView: UIView { return self }
 }
+
 
 // MARK: -
 // MARK: - LPDelayedSearch Class
 
 private var LPDelayedSearchKey: Void?
-private class LPDelayedSearch {
+private class LPDelayedSearchInternal {
     private var delayTime: TimeInterval = 0.8
     private var performSearchBlock: ((_ text: String?) -> Void)?
     
@@ -85,9 +86,9 @@ private class LPDelayedSearch {
         #endif
     }
     
-    static func observer(of searchView: UIView) -> LPDelayedSearch? {
+    static func observer(of searchView: UIView) -> LPDelayedSearchInternal? {
         let objc = objc_getAssociatedObject(searchView, &LPDelayedSearchKey)
-        return objc as? LPDelayedSearch
+        return objc as? LPDelayedSearchInternal
     }
     
     @discardableResult
@@ -165,7 +166,7 @@ private class LPDelayedSearch {
             if rootTypeName == tmpTypeName {
                 /// 判断RootView是否当前正在输入的SearchView
                 return tmpView == searchView ? tmpView : nil
-            } else if tmpView is LPDelayedSearchProtocol
+            } else if tmpView is LPDelayedSearch
                 && tmpTypeName != "UISearchBarTextField" {
                 return nil
             } else if tmpView.next is UIViewController {
