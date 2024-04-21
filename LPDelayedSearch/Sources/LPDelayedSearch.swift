@@ -12,7 +12,7 @@
 import UIKit
 
 public typealias LPPerformSearchBlock = (_ text: String?) -> Void
-public protocol LPDelayedSearch: class {
+public protocol LPDelayedSearch: AnyObject {
     
     /// 获取搜索视图
     var searchView: UIView { get }
@@ -107,11 +107,11 @@ private class LPDelayedSearchInternal {
         let center = NotificationCenter.default
         center.addObserver(self,
                            selector: #selector(textDidChange),
-                           name: .UITextFieldTextDidChange,
+                           name: UITextField.textDidChangeNotification,
                            object: nil)
         center.addObserver(self,
                            selector: #selector(textDidChange),
-                           name: .UITextViewTextDidChange,
+                           name: UITextView.textDidChangeNotification,
                            object: nil)
     }
     
